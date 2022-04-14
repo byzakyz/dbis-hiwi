@@ -26,7 +26,7 @@ In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In
 - `DECIMAL`
 - `NUMERIC`
 - `SERIAL` : Autoincrementing-Ganzzahl
-
+---
 
 
 ## Create Table
@@ -183,12 +183,50 @@ display(query_test)
 ---
 ##Create Index
 Falls kein Index angelegt ist, erfolgt die Suche nach Informationen innerhalb einer Relation sequentiell.
-Indexe ermöglichen bei der Suche das Nutzen von Datenstrukturen wie B+ Bäume um den Zugriff zu beschleunigen
+Indexe ermöglichen bei der Suche das Nutzen von Datenstrukturen wie B+ Bäume um den Zugriff zu beschleunigen.
 
-mit Beispiel Database:
-SELECT * FROM Relation WHERE Spalte = 'xxxx'
+**Syntax:**
+>CREATE [UNIQUE] INDEX 
+<_Indexname_>
+ON <_Relationenname_> (<_Attributname_> [<_Ordnung_>]{, <_Attributname_> [<_Ordnung_>]})
 
-mit vs ohne index mit EXPLAIN
+wobei  <_Ordnung_> ::= 
+ASC | DESC
+
+
+**Ein "SELECT" Beispiel aus dem Datenbank:**
+- Finde "order" welche an Timestamp '2020-8-16 10:31:23+01' erstellt wurde.
+
+**ohne Index:**
+
+Hier nutzen wir "EXPLAIN"-Klausel um kosten für das "SELECT" Operation zu sehen
+``` python
+from IPython.display import display, Code
+ 
+    query = '''
+    EXPLAIN SELECT * FROM order WHERE order_created_at = '2020-8-16 10:31:23+01'
+    '''
+
+query_test = %sql $query
+display(query_test)            
+```
+**mit index:**
+
+Hier wird ein index Namens "time_index" für das "order_created_at"-Attribut der Relation "order" angelegt, 
+um die Suche zu beschleunigen:
+``` python
+from IPython.display import display, Code
+ 
+    query = '''
+    CREATE INDEX time_index ON order(order_created_at)
+    EXPLAIN SELECT * FROM order WHERE order_created_at = '2020-8-16 10:31:23+01'
+    '''
+
+query_test = %sql $query
+display(query_test)            
+```
+
+Vergleiche kosten aus beiden Ausgaben
 
 ---
 ##Create View
@@ -201,13 +239,35 @@ sondern wird die gespeicherte Abfrage für jeden Verweis neu durchgeführt.
 - CREATE VIEW <_Sichtname_> [(<_Attributname_>{, <_Attributname_>})] AS <_Subquery_>
 
 **Beispiel:**
-- Erstelle einen View, der die Vorlesungen des Jahres 2020 zurückgibt.
+- Erstelle einen View, der die schon bezahlten 'Paid' Bestellungen "order" zurückgibt.
 ```python .noeval
-CREATE VIEW Vorlesungen_2020 AS
-SELECT * FROM Vorlesung WHERE Jahr = 2020
+CREATE VIEW paid_orders AS
+SELECT * FROM orders WHERE order_status = 'Paid'
 ```
--Nutze dieses View um
-
+- Gib den Namen der Läden "store_name" von schon bezahlten 'Paid' Bestellungen an.
+Nutze dabei das erstellte View.
+```python .noeval
+SELECT s.store_name AS "Store"
+FROM paid_orders o
+INNER JOIN stores s on s.store_id = o.order_store_id
+```
+- Gib den Namen der Käufer "user_full_name" von schon bezahlten 'Paid' Bestellungen an. 
+Nutze dabei das erstellte View.
+```python .noeval
+SELECT u.user_full_name AS "Name"
+FROM paid_orders o
+INNER JOIN users u on u.user_id = o.order_store_id
+```
+Ist dasselbe wie:
+```python .noeval
+SELECT u.user_full_name AS "Name",
+s.store_name AS "Store"
+FROM orders o
+INNER JOIN users u on u.user_id = o.order_user_id
+INNER JOIN stores s on s.store_id = o.order_store_id
+WHERE o.order_status = 'Paid'
+```
+---
 ### Data Manipulation Languange (DML)
 
 DML beschäftigt sich mit allen Typen von Anfragen in SQL-Sprache. 
