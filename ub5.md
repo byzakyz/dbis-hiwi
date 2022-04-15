@@ -336,7 +336,7 @@ Man kann die Anfragen aus der relationalen Algebra auch mit SQL ausdrücken.
 
 
 ---
-##Geschachtelte Anfragen mit EXISTS / IN / ALL / ANY Klauseln
+##Geschachtelte Anfragen mit EXISTS, IN, ALL, ANY Klauseln
 Diese sind Boolean Operatoren. Man kann in WHERE-Klausel mittels dieser Operatoren auch Unterabfragen erstellen.
 
 ###1- EXISTS
@@ -412,4 +412,42 @@ op ist einer der Vergleichsoperatoren =, <>, <=, <, >=, >.
 
 X ANY = (<_Subquery_>) ist dasselbe wie X IN (<_Subquery_>)
 
+---
+##Aggregatfunktionen mit AVG(), COUNT(), MIN(), MAX(), und SUM().
 
+Diese Funktionen führen eine Berechnung über eine Menge von Zeilen durch und liefern 
+das Ergebnis als eine einzige Zeile zurück. 
+
+Sie werden am meisten mit dem **GROUP BY**-Klausel innerhalb einer **SELECT**-Kalusel genutzt.
+Nachdem der **GROUP BY**-Klausel das Ergebnis als Mengen von Zeilen liefert, wird auf jeder Ergebnismenge mit der Aggregatfunktion 
+eine Berechnung durchgeführt.
+
+###1- AVG()
+
+###2- COUNT()
+
+###3- MIN(), MAX()
+
+###4- SUM()
+
+---
+##Gruppieren und Sortieren mit GROUP BY, HAVING, ORDER BY
+
+###GROUP BY
+
+###HAVING
+
+###ORDER BY
+
+---
+##Joins: INNER -, RIGHT -, LEFT -, FULL [OUTER] JOIN
+
+**Beispiel für INNER JOIN:**
+
+- bsp
+>
+
+![img.png](img.png)
+
+---
+##Änderungsoperationen: Einfügen, Löschen und Verändern
