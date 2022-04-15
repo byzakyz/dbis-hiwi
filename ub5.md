@@ -15,6 +15,8 @@ display(Code(hello_world_query, language='sql'))
 display(hello_world_test)            
 ``` 
 
+##HIER DML und DDL definieren, untertiteln nennen und clickable direct link zur Untertiteln
+
 ### SQL Datentypen
 In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In jeder Spalte haben die Attributwerte einen bestimmten Datentyp.
 #### Zeichentypen
@@ -29,7 +31,7 @@ In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In
 ---
 
 
-## Create Table
+## CREATE TABLE
 
 **Snytax:**
 - CREATE TABLE <_Relationenname_> (_<_Spaltendefinition_>{, <_Spaltendefinition_>}_)
@@ -62,7 +64,7 @@ display(Code(create_table_query, language='sql'))
 display(create_table_test)            
 ``` 
 ---
-##Primary Key
+##PRIMARY KEY
 
 Ein "Primary Key" ist eine Spalte oder eine Menge von Spalten, die jede Zeile eindeutig identifizieren lässt.
 Spalten als Primary Key können beim anlegen (link to create) oder ändern (link to alter) einer Relation im Graphen festgelegt werden.
@@ -104,7 +106,7 @@ display(query)
 ``` 
 ---
 
-##Alter Table
+##ALTER TABLE
 Mit "ALTER TABLE" kann eine schon angelegte Relation modifiziert werden. Damit kann eine Spalte zur Relation hinzüfügt
 oder gelöscht werden.
 
@@ -135,7 +137,7 @@ query_test = %sql $query
 display(query_test)            
 ```
 ---
-##Foreign Key
+##FOREIGN KEY
 
 Ein _Foreign Key_ ist eine Spalte oder eine Menge von Spalten in der Relation, 
 die sich auf den Primary Key einer anderer Relation beziehen und somit die 2 Relationen verknüpfen.
@@ -154,7 +156,7 @@ query_test = %sql $query
 display(query_test)            
 ```
 ---
-##Drop Table
+##DROP TABLE
 Damit kann mann die Relationen im Graphen löschen.
 
 - Lösche die Relation "Professor":
@@ -181,7 +183,7 @@ query_test = %sql $query
 display(query_test)            
 ```
 ---
-##Create Index
+##CREATE INDEX
 Falls kein Index angelegt ist, erfolgt die Suche nach Informationen innerhalb einer Relation sequentiell.
 Indexe ermöglichen bei der Suche das Nutzen von Datenstrukturen wie B+ Bäume um den Zugriff zu beschleunigen.
 
@@ -193,9 +195,11 @@ ON <_Relationenname_> (<_Attributname_> [<_Ordnung_>]{, <_Attributname_> [<_Ordn
 wobei  <_Ordnung_> ::= 
 ASC | DESC
 
+>DROP INDEX <_Indexname_>
+
 
 **Ein "SELECT" Beispiel aus dem Datenbank:**
-- Finde "order" welche an Timestamp '2020-8-16 10:31:23+01' erstellt wurde.
+- Finde die Bestellung "orders" welche an Timestamp '2020-8-16 10:31:23+01' "order_created_at" erstellt wurde.
 
 **ohne Index:**
 
@@ -229,14 +233,16 @@ display(query_test)
 Vergleiche kosten aus beiden Ausgaben
 
 ---
-##Create View
+##CREATE VIEW
 Erstellt eine Abfrage auf den Graphen und gibt es eine Name. 
 Später können weitere Abfragen auf dieser View verweisen. 
 Für den erstellten View wird keine Relation angelegt, 
 sondern wird die gespeicherte Abfrage für jeden Verweis neu durchgeführt.
 
 **Snytax:**
-- CREATE VIEW <_Sichtname_> [(<_Attributname_>{, <_Attributname_>})] AS <_Subquery_>
+>CREATE VIEW <_Sichtname_> [(<_Attributname_>{, <_Attributname_>})] AS <_Subquery_>
+
+>DROP VIEW <_Sicht -Name_>
 
 **Beispiel:**
 - Erstelle einen View, der die schon bezahlten 'Paid' Bestellungen "order" zurückgibt.
@@ -252,11 +258,13 @@ FROM paid_orders o
 INNER JOIN stores s on s.store_id = o.order_store_id
 ```
 - Gib den Namen der Käufer "user_full_name" von schon bezahlten 'Paid' Bestellungen an. 
-Nutze dabei das erstellte View.
+Nutze dabei das erstellte View und lösche diese am Ende.
 ```python .noeval
 SELECT u.user_full_name AS "Name"
 FROM paid_orders o
-INNER JOIN users u on u.user_id = o.order_store_id
+INNER JOIN users u on u.user_id = o.order_store_id;
+
+DROP VIEW paid_orders
 ```
 Ist dasselbe wie:
 ```python .noeval
@@ -268,7 +276,7 @@ INNER JOIN stores s on s.store_id = o.order_store_id
 WHERE o.order_status = 'Paid'
 ```
 ---
-### Data Manipulation Languange (DML)
+## Data Manipulation Languange (DML)
 
 DML beschäftigt sich mit allen Typen von Anfragen in SQL-Sprache. 
 >Die Grundform ist wie folgt definiert: `SELECT`<_Liste von Attributsnamen_>
@@ -288,6 +296,7 @@ Schuch(<ins>PID</ins>, Typ, Modell, Preis, DKuerzel)<p>
     FROM designerIn
     WHERE Vorname = 'Lukas'
 ```
+---
 ###WHERE -Klausel
 Nach dem `WHERE` können die folgenden Vergleichsoperatoren vorkommen:
 
@@ -305,7 +314,7 @@ Nach dem `WHERE` können die folgenden Vergleichsoperatoren vorkommen:
    AND Typ = 'Sandalen'
 ```
 
-
+---
 ### SELECT FROM- Klausel
 
 >`SELECT DISTINCT` - Klausel nimmt nur die unterschiedlichen Variablen. Die Duplikaten werden nicht angenommen.
@@ -326,5 +335,81 @@ Man kann die Anfragen aus der relationalen Algebra auch mit SQL ausdrücken.
  | Umbenennung            | ` AS`                    |
 
 
+---
+##Geschachtelte Anfragen mit EXISTS / IN / ALL / ANY Klauseln
+Diese sind Boolean Operatoren. Man kann in WHERE-Klausel mittels dieser Operatoren auch Unterabfragen erstellen.
+
+###1- EXISTS
+>Syntax: EXISTS(<_Subquery_>)
+
+Testet Falls es eine Zeile in **Subquery** existiert
+
+
+**Beispiel:**
+- Namen der Läden (stores), deren Lagerbestand(current_stock) größer als 50 für ein Produkt ist.
+``` python
+from IPython.display import display, Code
+ 
+    query = '''
+    SELECT store_name
+    FROM stores st
+    WHERE EXISTS
+        (SELECT 1 FROM store_stock ss 
+        WHERE ss.store_id = st.store_id 
+        AND current_stock > 50)
+    '''
+
+query_test = %sql $query
+display(query_test)            
+```
+###2- IN
+>Syntax: X IN (<_Subquery_>)
+
+Testet, ob X einer der Werte aus **Subquery** ist.
+
+**Beispiel:**
+- Gib den Namen der Käufern (users), deren Bestellung bezahlt (Paid) oder versandt (Shipped) ist.
+``` python
+from IPython.display import display, Code
+ 
+    query = '''
+    SELECT user_full_name
+    FROM users
+    WHERE user_id IN
+        (SELECT order_user_id
+         FROM orders
+         WHERE order_status = 'Paid' OR order_status = 'Shipped')
+    '''
+
+query_test = %sql $query
+display(query_test)            
+```
+**Beispiel 2:**
+- id der Bestellungen, deren status bezahlt oder versandt ist.
+```python .noeval
+SELECT order_id
+FROM orders
+WHERE order_status IN ('Paid', 'Shipped')
+```
+###3- ALL
+>Syntax: X <_op_> ALL (<_Subquery_>)
+
+Testet, ob alle Werte der Subquery die Voraussetzung erfüllen. op ist einer der Vergleichsoperatoren =, !=, <=, <, >=, >. 
+
+
+**Beispiel:**
+- Wie viel kostet das teuerste Produkt?
+```python .noeval
+SELECT product_name
+FROM products
+WHERE product_price >= ALL (SELECT product_price FROM products)
+```
+###4- ANY
+>Syntax: X <_op_> ANY (<_Subquery_>)
+
+Testet, ob ein Wert aus der Subquery die Voraussetzung erfüllt. 
+op ist einer der Vergleichsoperatoren =, <>, <=, <, >=, >. 
+
+X ANY = (<_Subquery_>) ist dasselbe wie X IN (<_Subquery_>)
 
 
