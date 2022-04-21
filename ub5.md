@@ -1,4 +1,4 @@
-[Übung5DML.md](https://github.com/byzakyz/dbis-hiwi/files/8485049/Ubung5DML.md)
+
 
 
 ``` python
@@ -285,16 +285,12 @@ DML beschäftigt sich mit allen Typen von Anfragen in SQL-Sprache.
 
 In Bezug auf relationalen Algebra, wird mit `SELECT` - Klausel die Anfrage projektiert. Die Relationen, die für die Anfrage benötigt wird, werden durch `FROM`-Klausel dargestellt. Hier entspricht das `FROM` -Klausel das Kreuzprodukt von Relationen. Und das `WHERE`- Klausel beschreibt die Bedingungen für die Selektion.
 
-####Beispiel
-Gegeben sei folgende relationale Datenbankschema:
-
-DesignerIn (<ins>Kuerzel</ins>, Vorname, Nachname) <p>
-Schuch(<ins>PID</ins>, Typ, Modell, Preis, DKuerzel)<p>
->Geben Sie die Nachnamen bei denen die Vorname "Lukas" sind.
-``` 
-    SELECT Nachname 
-    FROM designerIn
-    WHERE Vorname = 'Lukas'
+**Beispiel:**
+- Geben Sie die country ID von Deutschland.
+``` python .noeval
+    SELECT country_id
+    FROM countries
+    WHERE country_name = 'Germany'
 ```
 ---
 ###WHERE -Klausel
@@ -304,22 +300,42 @@ Nach dem `WHERE` können die folgenden Vergleichsoperatoren vorkommen:
 - arithmetische Operatoren : +, -, *, /, >, <, =
 - Mengen Operatoren : IN, NOT IN, ANY, ALL, EXISTS or BETWEEN, LIKE, IS NULL
 
-#### Beispiel
+**Beispiel:**
 
->Geben Sie die Modelle von Sandalen, die ihren Preisen größer als 500 sind.
+ - Geben Sie den Namen der Produkte an, die in noch keinem Geschäft angeboten werden.
+```   
+    SELECT
+    product_name AS "Product Name"
+    FROM store_stock RIGHT JOIN products ON store_stock.product_id = products.product_id
+    WHERE store_id IS NULL
 ```
-   SELECT Modell
-   FROM Schuch
-   WHERE Preis > 500
-   AND Typ = 'Sandalen'
+**Beispiel:**
+- Geben Sie die Produktnamen von Bücher, deren Preis größer als 15 euro sind.
+```
+  SELECT product_name AS "Product Name"
+  FROM  products
+  WHERE product_price > 15
+  AND product_type = "Book"
 ```
 
 ---
 ### SELECT FROM- Klausel
 
 >`SELECT DISTINCT` - Klausel nimmt nur die unterschiedlichen Variablen. Die Duplikaten werden nicht angenommen.
+- Geben Sie die alle Geschäftsnamen in Asien.
+ ```
+ SELECT DISTINCT store_name 
+ FROM countries NATURAL JOIN stores ON stores.store_country = countries.country_id
+ WHERE continent = "Europe"
+ ```
+
 
 > `SELECT* FROM`- Klausel projektiert alle Spalten in der Relation.
+- Geben Sie die alle Produkte.
+```
+SELECT* FROM products
+```
+
 
 ### SQL vs. Relationale Algebra 
 
@@ -433,12 +449,62 @@ eine Berechnung durchgeführt.
 ---
 ##Gruppieren und Sortieren mit GROUP BY, HAVING, ORDER BY
 
+Die allgemeine Syntax ist :
+```
+SELECT [...]
+FROM [...]
+WHERE[...]
+GROUP BY <Liste von Atrributsnamen>
+HAVING <Bedingung>
+ORDER BY <Liste von Atrributsnamen>
+```
 ###GROUP BY
+Um eine Ergebnismenge zu gruppieren wird die **GROUP BY**- Klausel benutzt. Die Ergebnisrelation enthält ein Tupel für jede Gruppe. 
+
+**Beispiel:**
+- Geben Sie die Anzahl von Geschäften im jeden Land.
+```
+SELECT COUNT(store_id) AS NumberOfStores, store_country
+FROM store
+GROUP BY store_country
+```
+
 
 ###HAVING
+Die **HAVING**- Klausel gibt die Bedingung nach der Gruppierung.
+
+**Beispiel:**
+- Geben Sie die Anzahl von Geschäften im jeden Land, deren ID-Nummer größer als 50 sind.
+```
+  SELECT COUNT(store_id) AS NumberOfStores, store_country
+  FROM store
+  GROUP BY store_country
+  HAVING COUNT(store_id) >50
+```
+Man kann nach der **HAVING**- Klausel alle Aggregatfunktionen benutzen.
+
+**Beispiel:**
+
+- Geben Sie den aktuellen Lagerbestand von allen Geschäfte, deren maximaler Lagerbestand größer als 400 oder minimaler Lagerbestand kleiner als 100 ist.
+
+```
+SELECT store_id, MAX(current_stock), MIN(current_stock)
+FROM store_stock
+GROUP BY store_id
+HAVING MAX(current_stock)> 400 OR MIN(current_stock)<100
+```
+
+
 
 ###ORDER BY
+ Durch **ORDER BY** werden die gefilterte Ergebnisse nach einem oder mehreren Attributen sortiert.
+ Die Reihenfolge werden durch ASC oder DESC bestimmt.
 
+**Beispiel**
+``` 
+ SELECT* FROM products
+ ORDER BY product_name ASC, product_price DESC
+```
 ---
 ##Joins: INNER -, RIGHT -, LEFT -, FULL [OUTER] JOIN
 
