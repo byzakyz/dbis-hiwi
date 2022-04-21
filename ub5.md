@@ -15,9 +15,30 @@ display(Code(hello_world_query, language='sql'))
 display(hello_world_test)            
 ``` 
 
-##HIER DML und DDL definieren, untertiteln nennen und clickable direct link zur Untertiteln
+# Relationale Datenbanksprache SQL
 
-### SQL Datentypen
+## DDL und DML
+
+
+* [1) SQL Datentypen](#sql-datentypen)
+
+* [2)  Create Table,Primary Key, Foreign Key](#create-table)
+
+* [3) Alter Table, Drop Table](#alter-table)
+
+* [4) Create Index, Create View](#create-ndex)
+
+* [5) Data Manipulation Languange](#data-manipulation-languange-dml)
+
+* [6) Geschachtelte Anfragen mit EXISTS, IN, ALL, ANY Klauseln ](#geschachtelte-anfragen-mit-exsts-n-all-any-klauseln)
+ 
+* [7) Aggregatfunktionen mit AVG(), COUNT(), MIN(), MAX(), und SUM()](#aggregatfunktionen-mit-avg-count-mn-max-und-sum)
+
+* [8) Joins: INNER -, RIGHT -, LEFT -, FULL [OUTER] JOIN ](#joins-nner---rght---left---full-outer-jon)
+
+* [9) Änderungsoperationen: Einfügen, Löschen und Verändern](#nderungsoperationen-einfgen-lschen-und-verndern)
+###  SQL Datentypen 
+
 In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In jeder Spalte haben die Attributwerte einen bestimmten Datentyp.
 #### Zeichentypen
 - `CHAR(size)` or `CHARACTER(size)`             : Strings mit der festen Länge n
@@ -31,7 +52,7 @@ In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In
 ---
 
 
-## CREATE TABLE
+##  <a name="CREATE TABLE"></a> CREATE TABLE
 
 **Snytax:**
 - CREATE TABLE <_Relationenname_> (_<_Spaltendefinition_>{, <_Spaltendefinition_>}_)
