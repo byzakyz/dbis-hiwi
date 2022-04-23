@@ -1,20 +1,5 @@
 
 
-
-``` python
- from IPython.display import display, Code
-# SQL Befehl
-hello_world_query = '''
-    SELECT 'Hello World'
-'''
-# Ausführen des Befehls
-hello_world_test = %sql $hello_world_query
-# Ausgabe des Befehls mit Syntax-Highlighting
-display(Code(hello_world_query, language='sql'))
-# Ausgabe der Ergebnisse
-display(hello_world_test)            
-``` 
-
 # Relationale Datenbanksprache SQL
 
 ## DDL und DML
@@ -37,6 +22,72 @@ display(hello_world_test)
 * [8) Joins: INNER -, RIGHT -, LEFT -, FULL [OUTER] JOIN ](#joins-nner---rght---left---full-outer-jon)
 
 * [9) Änderungsoperationen: Einfügen, Löschen und Verändern](#nderungsoperationen-einfgen-lschen-und-verndern)
+---
+###Datenbank starten
+``` python
+from IPython.display import Markdown, display
+path = "assets/_pgdata"
+try:
+    running_tests
+except NameError:
+    import os.path
+    #!rm -rf ~/.pgdata
+    if not os.path.exists(path):
+        display(Markdown("# Datenbank wird initialisiert."))
+        display(Markdown("### Datenbank wird extrahiert."))
+        !tar -zx --touch --checkpoint=.50 -f assets/pgdata.tar.gz -C assets/
+        # !pg_ctl -D $path initdb
+        display(Markdown("### Datenbank initialisiert"))
+    !chmod 700 $path
+    display(Markdown("# Server wird (neu)gestartet."))
+    if os.path.exists(path + "/postmaster.pid"):
+        !pg_ctl -D $path restart
+        display(Markdown("### Datenbank restart OK"))
+    else:
+        !pg_ctl -D $path start
+        display(Markdown("### Datenbank start OK, verbinde..."))
+display(Markdown("#### Einrichtung der Übungsdatenbank"))
+!psql -c "DROP DATABASE IF EXISTS exercise_sheet;" postgres
+!psql -c "CREATE DATABASE exercise_sheet;" postgres
+display(Markdown("#### Verbindung mit Datenbank wird hergestellt..."))
+%reload_ext sql
+%sql postgresql://localhost/exercise_sheet
+%sql ABORT;--NOOP
+check=!pg_isready -h localhost -d exercise_sheet -q;echo $?
+if check[0]=='0':
+    # x = %sql SELECT 'OK' AS "status"
+    display(x)
+    display(Markdown("# Server OK! Es kann los gehen!"))
+else:
+    display(Markdown("# Server nicht OK! Versuche, den Kernel neu zu starten und die Zelle erneut auszuführen."))
+```
+
+###Datenbankschema initialisieren
+``` python
+from IPython.display import Markdown, display, Code
+from urllib.request import urlopen
+try:
+    display(Markdown("#### Herunterladen der Schema Datei"))
+    # url = '/home/jovyan/schema.sql'
+    url = 'https://git.rwth-aachen.de/i5/teaching/dbis-ss-20-21/-/raw/master/assets/schema.sql'
+    url_open = urlopen(url)
+    if ( url_open.getcode() == 200 ):
+        display(Markdown("HTTP 200 OK"))
+    schema = url_open.read().decode('utf-8')
+except urllib.error.HTTPError as e:
+    error = body = e.read().decode()
+    display(Markdown("# Fehler: "))
+    print ( error )
+# print(schema)
+display(Markdown("#### Schema import"))
+!psql -c "$schema" exercise_sheet
+products_exists = %sql SELECT TRUE FROM pg_attribute WHERE attrelid = 'products'::regclass AND attname = 'product_name'
+if ( products_exists ):
+    display(Markdown("# IMPORT OK! Es kann los gehen!"))
+else:
+    display(Markdown("# Fehler!"))
+```
+
 ###  SQL Datentypen 
 
 In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In jeder Spalte haben die Attributwerte einen bestimmten Datentyp.
