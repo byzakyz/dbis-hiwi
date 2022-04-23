@@ -24,6 +24,7 @@
 * [9) Änderungsoperationen: Einfügen, Löschen und Verändern](#nderungsoperationen-einfgen-lschen-und-verndern)
 ---
 ###Datenbank starten
+
 ``` python
 from IPython.display import Markdown, display
 path = "assets/_pgdata"
@@ -63,13 +64,14 @@ else:
 ```
 
 ###Datenbankschema initialisieren
+
 ``` python
 from IPython.display import Markdown, display, Code
 from urllib.request import urlopen
 try:
     display(Markdown("#### Herunterladen der Schema Datei"))
     # url = '/home/jovyan/schema.sql'
-    url = 'https://git.rwth-aachen.de/i5/teaching/dbis-ss-20-21/-/raw/master/assets/schema.sql'
+    url = 'https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/schema.sql'
     url_open = urlopen(url)
     if ( url_open.getcode() == 200 ):
         display(Markdown("HTTP 200 OK"))
