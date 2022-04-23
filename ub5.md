@@ -92,11 +92,11 @@ else:
 
 ###  SQL Datentypen 
 
-In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In jeder Spalte haben die Attributwerte einen bestimmten Datentyp.
+In einer Datenbank muss jede Spalte einer Relation einen Namen und einen **Datentyp** haben. In jeder Spalte haben die Attributwerte einen bestimmten Datentyp.
 #### Zeichentypen
-- `CHAR(size)` or `CHARACTER(size)`             : Strings mit der festen Länge n
-- `VARCHAR(size)` or `CHARACTER VARYING(size)`  : Strings mit der variablen Länge ( speichert Max. 255 Byte)
-- `Text`                                        : unbegrenzt
+- `CHAR(n)` or `CHARACTER(n)`             : Strings mit der festen Länge n
+- `VARCHAR(n)` or `CHARACTER VARYING(n)`  : Strings mit der Länge 0 bis n (n ist Max. 65535)
+- `Text or VARCHAR`                                        : unbegrenzt (max. 65535)
 #### Numerische Typen
 - `INTEGER` or `INT` 
 - `DECIMAL`
@@ -106,6 +106,8 @@ In einer Datenbank muss jede Spalte einen Namen und einen **Datentyp** haben. In
 
 
 ##  <a name="CREATE TABLE"></a> CREATE TABLE
+
+Für Anlegen einer Relation
 
 **Snytax:**
 - CREATE TABLE <_Relationenname_> (_<_Spaltendefinition_>{, <_Spaltendefinition_>}_)
@@ -118,16 +120,17 @@ und <_Option_> ::= DEFAULT <_Ausdruck_> | NOT NULL | UNIQUE | PRIMARY KEY | ...
 - Matrikelnummer besteht aus 6 Ziffern, Semester ist eine 2-stelliger Zahl, Adresse hat maximal die Laenge 50, Name hat maximal die Lange 20
 
 ``` python .noeval
-CREATE TABLE Student( Name CHAR (20) NOT NULL, Semester INTEGER(2), Adresse VARCHAR (50))'''
+CREATE TABLE Student( Name CHAR (20) NOT NULL, Semester INTEGER, Adresse VARCHAR (50))'''
 ```
+Beim Ausführen nutzen wir noch "IF NOT EXISTS" um Fehlern zu vermeiden, falls der Relation schon angelegt wurde.
 
 Als ausführbarer Code:
 ``` python
- from IPython.display import display, Code
+from IPython.display import display, Code
 create_table_query = '''
-    CREATE TABLE Student
+    CREATE TABLE IF NOT EXISTS Student
     ( Name CHAR (20) NOT NULL,
-    Semester INTEGER(2), 
+    Semester INTEGER, 
     Adresse VARCHAR (50))
 '''
 # Ausführen des Befehls
@@ -147,36 +150,38 @@ Spalten als Primary Key können beim anlegen (link to create) oder ändern (link
 
 **Beispiel für _eindeutiger_ Pimary Key:**
 
-- Studenten lassen sich mit ihrer 6-stelliger Matrikelnummer eindeutig identifizieren.
+- Studenten lassen sich mit ihrer Matrikelnummer eindeutig identifizieren.
 
-Da wir die "Student"-Relation schon im vorherigen Abschnitt angelegt haben, 
-müssen wir eine änderung mit "ALTER TABLE" durchführen, um die Matrikelnummer als Primary Key hinzuzufügen.
+Da wir die `Student`-Relation schon im vorherigen Abschnitt angelegt haben, 
+müssen wir eine Änderung mit `ALTER TABLE` durchführen, um die Matrikelnummer als Primary Key hinzuzufügen.
 Diese lernen wir erst im folgenden Kapitel.
 
 Wäre die Relation "Student" nicht schon angelegt, 
 dann hätten wir den Matrikelnummer als Primary Key beim anlegen der Relation wie folgt festlegen können:
 ``` python .noeval
-CREATE TABLE Student (MatrNum INTEGER(6) PRIMARY KEY)
+CREATE TABLE Student (MatrNum INTEGER PRIMARY KEY)
 ```
 
 
 **Beispiel für _zusammengesetzter_ primary key:**
 - Vorlesungen lassen sich mit Vorlesungsname und Jahr eindeutig identifizieren:
 ``` python .noeval
-CREATE TABLE Vorlesung (VName VAR(20), Jahr INTEGER(4), PRIMARY KEY(VName, Jahr))
+CREATE TABLE Vorlesung (VName VAR(20), Jahr INTEGER, PRIMARY KEY(VName, Jahr))
 ```
 
 Als ausführbarer Code:
 ``` python
- from IPython.display import display, Code
-    query = '''
-    CREATE TABLE Vorlesung (VName VAR(20), 
-    Jahr INTEGER(4), PRIMARY KEY(VName, Jahr))
-    '''
+from IPython.display import display, Code
+query = '''
+    CREATE TABLE IF NOT EXISTS Vorlesung (VName VAR(20), 
+    Jahr INTEGER, PRIMARY KEY(VName, Jahr))
+'''
 # Ausführen des Befehls
 query_test = %sql $query
+# Ausgabe des Befehls mit Syntax-Highlighting
+display(Code(query, language='sql'))
 # Ausgabe der Ergebnisse
-display(query)            
+display(query_test)            
 ``` 
 ---
 
@@ -184,47 +189,55 @@ display(query)
 Mit "ALTER TABLE" kann eine schon angelegte Relation modifiziert werden. Damit kann eine Spalte zur Relation hinzüfügt
 oder gelöscht werden.
 
-**neue Spalte hinzufügen:**
-- Studenten lassen sich mit ihrer 6-stelliger Matrikelnummer eindeutig identifizieren.
+**Beispiel:**
+- Studenten lassen sich mit ihrer Matrikelnummer eindeutig identifizieren.
+
+Die Spalte `MatrNum` existiert schon, ist aber kein Primary Key. Wir können diese Spalte einfach löschen und neu anlegen, diesmal als Primary Key.
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     ALTER TABLE Student 
-    ADD COLUMN MatrNum INT(6) PRIMARY KEY
-    '''
+    DROP COLUMN MatrNum
+    ADD COLUMN MatrNum INT PRIMARY KEY
+'''
 
 query_test = %sql $query
 display(query_test)            
 ``` 
-**Eine Spalte löschen**
+<!---**Eine Spalte löschen**
 - Adressen der Studenten sollen nicht mehr gespeichert werden
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     ALTER TABLE Student 
     DROP COLUMN Adresse
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
 ```
+-->
+
+
 ---
 ##FOREIGN KEY
 
 Ein _Foreign Key_ ist eine Spalte oder eine Menge von Spalten in der Relation, 
-die sich auf den Primary Key einer anderer Relation beziehen und somit die 2 Relationen verknüpfen.
+die sich auf dem Primary Key einer anderen Relation beziehen und somit die 2 Relationen verknüpfen.
 
 **Beispiel:**
 - Studenten können Vorlesungen in einem Jahr belegen und können eine Note bekommen.
+
+Wir erstellen hier eine Relation:`Belegung` und verknüpfen diese mit der Relation`Student` durch ein Foreign Key.
 ``` python
 from IPython.display import display, Code
  
-    query = '''
-    CREATE TABLE Belegung (MatrNum INTEGER(6), VName VAR(20), Jahr INT(4), Note DECIMAL(2),
+query = '''
+    CREATE TABLE IF NOT EXISTS Belegung (MatrNum INTEGER, VName VAR(20), Jahr INT, Note DECIMAL(2),
     FOREIGN KEY (MatrNum) REFERENCES Student (MatrNum))
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
@@ -237,9 +250,9 @@ Damit kann mann die Relationen im Graphen löschen.
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     DROP TABLE Professor
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
@@ -249,9 +262,9 @@ Dieses kann man wie folgt vermeiden:
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     DROP TABLE IF EXISTS Professor
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
@@ -277,28 +290,28 @@ ASC | DESC
 
 **ohne Index:**
 
-Hier nutzen wir "EXPLAIN"-Klausel um kosten für das "SELECT" Operation zu sehen
+Hier nutzen wir `EXPLAIN`-Klausel um kosten für das `SELECT` Operation zu sehen
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     EXPLAIN SELECT * FROM order WHERE order_created_at = '2020-8-16 10:31:23+01'
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
 ```
 **mit index:**
 
-Hier wird ein index Namens "time_index" für das "order_created_at"-Attribut der Relation "order" angelegt, 
+Hier wird ein Index Namens `time_index` für das `order_created_at`-Attribut der Relation `order` angelegt, 
 um die Suche zu beschleunigen:
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     CREATE INDEX time_index ON order(order_created_at)
     EXPLAIN SELECT * FROM order WHERE order_created_at = '2020-8-16 10:31:23+01'
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
@@ -319,27 +332,44 @@ sondern wird die gespeicherte Abfrage für jeden Verweis neu durchgeführt.
 >DROP VIEW <_Sicht -Name_>
 
 **Beispiel:**
-- Erstelle einen View, der die schon bezahlten 'Paid' Bestellungen "order" zurückgibt.
-```python .noeval
-CREATE VIEW paid_orders AS
-SELECT * FROM orders WHERE order_status = 'Paid'
+- Erstelle einen View, der die schon bezahlten (`Paid`) Bestellungen (`order`) zurückgibt.
+
+``` python
+from IPython.display import display, Code
+ 
+query = '''
+    CREATE VIEW paid_orders AS
+    SELECT * FROM orders WHERE order_status = 'Paid'
+'''
+
+query_test = %sql $query
+display(query_test)            
 ```
-- Gib den Namen der Läden "store_name" von schon bezahlten 'Paid' Bestellungen an.
+
+
+- Gib den Namen der Läden (`store_name`) von schon bezahlten (`Paid`) Bestellungen an.
 Nutze dabei das erstellte View.
 ```python .noeval
 SELECT s.store_name AS "Store"
 FROM paid_orders o
 INNER JOIN stores s on s.store_id = o.order_store_id
 ```
-- Gib den Namen der Käufer "user_full_name" von schon bezahlten 'Paid' Bestellungen an. 
-Nutze dabei das erstellte View und lösche diese am Ende.
-```python .noeval
-SELECT u.user_full_name AS "Name"
-FROM paid_orders o
-INNER JOIN users u on u.user_id = o.order_store_id;
+- Gib den Namen der Käufer (`user_full_name`) von schon bezahlten Bestellungen an. 
+Nutze dabei das erstellte View `paid_orders`. Lösche das View am Ende.
+``` python
+from IPython.display import display, Code
+ 
+query = '''
+    SELECT u.user_full_name AS "Name"
+    FROM paid_orders o
+    INNER JOIN users u on u.user_id = o.order_store_id;
+    DROP VIEW paid_orders
+'''
 
-DROP VIEW paid_orders
+query_test = %sql $query
+display(query_test)            
 ```
+
 Ist dasselbe wie:
 ```python .noeval
 SELECT u.user_full_name AS "Name",
@@ -440,14 +470,14 @@ Testet Falls es eine Zeile in **Subquery** existiert
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     SELECT store_name
     FROM stores st
     WHERE EXISTS
         (SELECT 1 FROM store_stock ss 
         WHERE ss.store_id = st.store_id 
         AND current_stock > 50)
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
@@ -462,14 +492,14 @@ Testet, ob X einer der Werte aus **Subquery** ist.
 ``` python
 from IPython.display import display, Code
  
-    query = '''
+query = '''
     SELECT user_full_name
     FROM users
     WHERE user_id IN
         (SELECT order_user_id
          FROM orders
          WHERE order_status = 'Paid' OR order_status = 'Shipped')
-    '''
+'''
 
 query_test = %sql $query
 display(query_test)            
@@ -481,6 +511,11 @@ SELECT order_id
 FROM orders
 WHERE order_status IN ('Paid', 'Shipped')
 ```
+``` python
+from IPython.display import display, Code
+#try it here    
+```
+
 ###3- ALL
 >Syntax: X <_op_> ALL (<_Subquery_>)
 
@@ -494,6 +529,10 @@ SELECT product_name
 FROM products
 WHERE product_price >= ALL (SELECT product_price FROM products)
 ```
+``` python
+from IPython.display import display, Code
+#try it here       
+```
 ###4- ANY
 >Syntax: X <_op_> ANY (<_Subquery_>)
 
@@ -502,6 +541,10 @@ op ist einer der Vergleichsoperatoren =, <>, <=, <, >=, >.
 
 X ANY = (<_Subquery_>) ist dasselbe wie X IN (<_Subquery_>)
 
+``` python
+from IPython.display import display, Code
+#try it here       
+```
 ---
 ##Aggregatfunktionen mit AVG(), COUNT(), MIN(), MAX(), und SUM().
 
